@@ -1,7 +1,8 @@
-import {useEffect} from 'react'
 import backgroundImage from './assets/background.png'
-import {Button, useState} from '@nextui-org/react'
+import React, {useEffect, useState} from 'react'
+import {Button, Modal, useModal, Text} from '@nextui-org/react'
 import {db} from './firebase'
+import {collection, onSnapshot, doc, updateDoc, increment} from 'firebase/firestore'
 
 const appStyle = {
   backgroundImage: `url(${backgroundImage})`,
@@ -31,24 +32,52 @@ const buttonStyle = {
 
 function App() {
   const [games, setGames] = useState([])
+  const {setVisible, bindings} = useModal()
+  const [selectedGame, setSelectedGame] = useState(null)
 
   useEffect(() => {
-    const unsubscribe = db.collection('games').onSnapshot(snapshot => {
-      const gamesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setGames(gamesData)
+    const unsubscribe = onSnapshot(collection(db, 'games'), (snapshot) => {
+      setGames(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })))
     })
 
-    return unsubscribe
+    return () => unsubscribe()
   }, [])
 
-  const handleVote = (gameId) => {
-    const gameRef = db.collection('games').doc(gameId)
-    gameRef.update({ votes: games.find(game => game.id === gameId).votes + 1 })
+  const handleVote = async (gameId) => {
+    const gameRef = doc(db, 'games', gameId)
+    await updateDoc(gameRef, {votes: increment(1)})
+  }
+
+  const openModal = (game) => {
+    setSelectedGame(game)
+    setVisible(true)
   }
 
   return (
     <div style={appStyle}>
       <div style={buttonContainerStyle}>
+        {games.map(game => (
+          <div key={game.id} style={buttonStyle}>
+            <Button shadow color="primary" onClick={() => openModal(game)}>{game.name}</Button>
+          </div>
+        ))}
+        <Modal {...bindings}>
+          <Modal.Header>
+            <Text size={18}>
+              {selectedGame ? `Vote for ${selectedGame.name}` : 'Select a Game'}
+            </Text>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedGame && (
+              <div>
+                <Text>Do you want to vote for {selectedGame.name}?</Text>
+                <Button color="success" onClick={() => handleVote(selectedGame.id)}>
+                  Vote
+                </Button>
+              </div>
+            )}
+          </Modal.Body>
+        </Modal>
         <div style={buttonStyle}>
           <Button shadow size="lg" color="primary">Vote on a Game</Button>
         </div>
