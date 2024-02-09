@@ -1,15 +1,46 @@
-import './App.css'
-import {Button, Container} from '@nextui-org/react'
+import backgroundImage from './assets/background.png'
+import {Button} from '@nextui-org/react'
 
 function App() {
+
+  const appStyle = {
+    backgroundImage: `url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+
+  const buttonContainerStyle = {
+    display: 'flex',
+    height: '100vh',
+    width: '100vw',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+
+  const buttonStyle = {
+    width: '50%',
+    display: 'flex',
+    justifyContent: 'center'
+  }
+
   return (
-    <Container css={{ d: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div css={{ display: 'flex', width: '100%', justifyContent: 'space-around' }}>
-        <Button shadow color="gradient">Vote on a Game</Button>
-        <Button shadow color="gradient">Select a Game</Button>
+    <div style={appStyle}>
+      <div style={buttonContainerStyle}>
+        <div style={buttonStyle}>
+          <Button shadow size="lg" color="primary">Vote on a Game</Button>
+        </div>
+        <div style={buttonStyle}>
+          <Button shadow color="gradient">Select a Game</Button>
+        </div>
       </div>
-    </Container>
+    </div>
   )
 }
 
-export default App;
+export default App
