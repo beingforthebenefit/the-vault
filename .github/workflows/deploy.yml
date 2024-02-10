@@ -28,8 +28,8 @@ jobs:
         git config --global user.name "GitHub Actions"
 
     - name: Deploy
-      run: npm run deploy
+      run: |
+        npx gh-pages -d build -x -r https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PUBLIC_URL: /the-vault/
       
