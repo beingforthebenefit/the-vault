@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react'
-import {Button, Modal, useModal, Text, Loading, Grid, Card} from '@nextui-org/react'
+import {Button, Modal, useModal, Text, Loading, Grid} from '@nextui-org/react'
 import backgroundImage from './assets/background.png'
 import {db} from './firebase'
 import {collection, onSnapshot, doc, updateDoc, increment, writeBatch, setDoc, getDoc, Timestamp} from 'firebase/firestore'
