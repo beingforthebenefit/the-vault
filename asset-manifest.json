@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/the-vault/static/css/main.e6c13ad2.css",
+    "main.js": "/the-vault/static/js/main.6b2ec5a0.js",
+    "static/js/592.7499de56.chunk.js": "/the-vault/static/js/592.7499de56.chunk.js",
+    "static/media/background.png": "/the-vault/static/media/background.13e657d43a155e93cdf3.png",
+    "index.html": "/the-vault/index.html",
+    "main.e6c13ad2.css.map": "/the-vault/static/css/main.e6c13ad2.css.map",
+    "main.6b2ec5a0.js.map": "/the-vault/static/js/main.6b2ec5a0.js.map",
+    "592.7499de56.chunk.js.map": "/the-vault/static/js/592.7499de56.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.6b2ec5a0.js"
+  ]
+}
