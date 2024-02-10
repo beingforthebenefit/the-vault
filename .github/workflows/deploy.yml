@@ -2,7 +2,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   build-and-deploy:
@@ -21,6 +21,11 @@ jobs:
 
     - name: Build
       run: npm run build
+
+    - name: Configure Git
+      run: |
+        git config --global user.email "Github Actions"
+        git config --global user.name "actions@github.com"
 
     - name: Deploy
       run: npm run deploy
