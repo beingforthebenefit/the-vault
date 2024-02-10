@@ -31,4 +31,5 @@ jobs:
       run: npm run deploy
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PUBLIC_URL: /the-vault/
       
