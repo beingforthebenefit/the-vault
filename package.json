@@ -2,6 +2,7 @@
   "name": "the-vault",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://beingforthebenefit.github.io/the-vault",
   "dependencies": {
     "@nextui-org/react": "^1.0.0-beta.12",
     "@testing-library/jest-dom": "^5.17.0",
@@ -36,5 +37,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
   }
 }
