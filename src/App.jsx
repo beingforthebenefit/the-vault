@@ -3,7 +3,7 @@ import {Button, Modal, useModal, Text, Loading, Grid, Card} from '@nextui-org/re
 import backgroundImage from './assets/background.png'
 import {db} from './firebase'
 import {collection, onSnapshot, doc, writeBatch, getDoc} from 'firebase/firestore'
-import {startVoting, handleVote, resetVotes} from './utils/firebaseUtils'
+import {startVoting, handleVote, resetVotes, listenToTimerChanges} from './utils/firebaseUtils'
 import SelectGameModal from './components/modals/SelectGameModal'
 import WinnerModal from './components/modals/WinnerModal'
 
@@ -58,19 +58,29 @@ function App() {
     return () => clearInterval(interval)
   }, [determineWinner])
 
-  useEffect(() => {
-    const timerRef = doc(db, 'timer', 'timer')
-    getDoc(timerRef).then(docSnap => {
-      if (docSnap.exists()) {
-        const timerEndsAt = docSnap.data().votingEndsAt.toDate()
-        setTimerEnds(timerEndsAt)
+  const onVoteButtonClick = async () => {
+    await startVoting()
+    setVisible(true)
+  }
 
-        if (new Date() < timerEndsAt) {
-          startCountdown(timerEndsAt)
-        }
-      }
+  useEffect(() => {
+    const unsubscribeTimer = listenToTimerChanges(
+      setTimerEnds,
+      setSecondsLeft,
+      determineWinner,
+      setVisible
+    )
+
+    const unsubscribeGames = onSnapshot(collection(db, 'games'), (snapshot) => {
+      setGames(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })))
+      setLoading(false)
     })
-  }, [startCountdown])
+
+    return () => {
+      unsubscribeTimer()
+      unsubscribeGames()
+    }
+  }, [setTimerEnds, setSecondsLeft, determineWinner, setVisible])
 
   useEffect(() => {
     const determineWinner = () => {
@@ -120,7 +130,7 @@ function App() {
       </Modal.Header>
       <Modal.Body>
         {games.map(game => (
-          <Button key={game.id} onClick={() => handleVote(game.id)}>{game.name}</Button>
+          <Button key={game.id} onClick={() => handleVote(game.id, setVoteCast, setVisible)}>{game.name}</Button>
         ))}
       </Modal.Body>
     </Modal>
@@ -134,7 +144,7 @@ function App() {
           {voteCast && <Text shadow size={24} align="center" color="white" style={{ paddingTop: 150 }}>Vote Cast!</Text>}
           <Grid.Container gap={2} justify="center" alignItems="center" style={{ minHeight: '80vh' }}>
             <Grid xs={6} justify="center">
-              <Button shadow size="lg" color="gradient" onClick={() => startVoting(timerEnds, startCountdown, setTimerEnds, setVisible)} disabled={voteCast}>Vote on a Game</Button>
+              <Button shadow size="lg" color="gradient" onClick={onVoteButtonClick} disabled={voteCast}>Vote on a Game</Button>
             </Grid>
             <Grid xs={6} justify="center">
               <Button shadow size="lg" color="gradient" onClick={() => setSelectGameModalVisible(true)} disabled={voteCast}>Select a Game</Button>
@@ -153,7 +163,7 @@ function App() {
           <Button size="sm" auto color="error" onClick={() => resetVotes(games)} style={{ position: 'absolute', top: 20, right: 20 }}>Reset Votes</Button>
           {renderVoteModalContent()}
           <SelectGameModal isVisible={selectGameModalVisible} onClose={() => setSelectGameModalVisible(false)} games={games} />
-          <WinnerModal isVisible={winnerModalVisible} onClose={() => setWinnerModalVisible(false)} winningGame={winningGame} />
+          {/* <WinnerModal isVisible={winnerModalVisible} onClose={() => setWinnerModalVisible(false)} winningGame={winningGame} /> */}
         </>
       )}
       {secondsLeft > 0 && <Text size={18} color="white" style={{ position: 'absolute', bottom: 20, right: 20 }}>Voting ends in: {secondsLeft} seconds</Text>}
