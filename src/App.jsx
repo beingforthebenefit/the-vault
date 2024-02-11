@@ -1,8 +1,11 @@
 import React, {useEffect, useState, useCallback} from 'react'
-import {Button, Modal, useModal, Text, Loading, Grid} from '@nextui-org/react'
+import {Button, Modal, useModal, Text, Loading, Grid, Card} from '@nextui-org/react'
 import backgroundImage from './assets/background.png'
 import {db} from './firebase'
-import {collection, onSnapshot, doc, updateDoc, increment, writeBatch, setDoc, getDoc, Timestamp} from 'firebase/firestore'
+import {collection, onSnapshot, doc, writeBatch, getDoc} from 'firebase/firestore'
+import {startVoting, handleVote, resetVotes} from './utils/firebaseUtils'
+import SelectGameModal from './components/modals/SelectGameModal'
+import WinnerModal from './components/modals/WinnerModal'
 
 function App() {
   const [games, setGames] = useState([])
@@ -14,19 +17,6 @@ function App() {
   const [winningGame, setWinningGame] = useState(null)
   const [selectGameModalVisible, setSelectGameModalVisible] = useState(false)
   const [voteCast, setVoteCast] = useState(false)
-
-  const startVoting = async () => {
-    const now = new Date()
-    if (!timerEnds || now >= timerEnds) {
-      // Timer expired, start a new voting session
-      const newTimerEnds = new Date(now.getTime() + 60000) // 60 seconds from now
-      const timerRef = doc(db, 'timer', 'timer')
-      await setDoc(timerRef, { votingEndsAt: Timestamp.fromDate(newTimerEnds) })
-      setTimerEnds(newTimerEnds)
-      startCountdown(newTimerEnds)
-    }
-    setVisible(true)
-  }
 
   const resetVotesAfterWinner = useCallback(async () => {
     const batch = writeBatch(db)
@@ -67,22 +57,6 @@ function App() {
 
     return () => clearInterval(interval)
   }, [determineWinner])
-
-  const handleVote = async (gameId) => {
-    const gameRef = doc(db, 'games', gameId)
-    await updateDoc(gameRef, { votes: increment(1) })
-    setVoteCast(true)
-    setVisible(false)
-  }
-
-  const resetVotes = async () => {
-    const batch = writeBatch(db)
-    games.forEach(game => {
-      const gameRef = doc(db, 'games', game.id)
-      batch.update(gameRef, { votes: 0 })
-    })
-    await batch.commit()
-  }
 
   useEffect(() => {
     const timerRef = doc(db, 'timer', 'timer')
@@ -152,30 +126,6 @@ function App() {
     </Modal>
   )
 
-  const renderSelectGameModalContent = () => (
-    <Modal open={selectGameModalVisible} onClose={() => setSelectGameModalVisible(false)}>
-      <Modal.Header>
-        <Text size={18}>Select a Game</Text>
-      </Modal.Header>
-      <Modal.Body>
-        {games.map(game => (
-          <Button key={game.id} onClick={() => window.location.href = game.url}>{game.name}</Button>
-        ))}
-      </Modal.Body>
-    </Modal>
-  )
-
-  const renderWinnerModal = () => (
-    <Modal open={winnerModalVisible} onClose={() => setWinnerModalVisible(false)}>
-      <Modal.Header>
-        <Text size={18}>Winner: {winningGame?.name}</Text>
-      </Modal.Header>
-      <Modal.Body>
-        <Button onClick={() => window.location.href = winningGame?.url}>Go to Game</Button>
-      </Modal.Body>
-    </Modal>
-  )
-
   return (
     <div style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', padding: 0, margin: 0, width: '100vw', height: '100vh' }}>
       {loading ? <Loading size="lg" /> : (
@@ -184,13 +134,13 @@ function App() {
           {voteCast && <Text shadow size={24} align="center" color="white" style={{ paddingTop: 150 }}>Vote Cast!</Text>}
           <Grid.Container gap={2} justify="center" alignItems="center" style={{ minHeight: '80vh' }}>
             <Grid xs={6} justify="center">
-              <Button shadow size="lg" color="gradient" onClick={startVoting} disabled={voteCast}>Vote on a Game</Button>
+              <Button shadow size="lg" color="gradient" onClick={() => startVoting(timerEnds, startCountdown, setTimerEnds, setVisible)} disabled={voteCast}>Vote on a Game</Button>
             </Grid>
             <Grid xs={6} justify="center">
               <Button shadow size="lg" color="gradient" onClick={() => setSelectGameModalVisible(true)} disabled={voteCast}>Select a Game</Button>
             </Grid>
           </Grid.Container>
-          {/* <Grid.Container gap={2} justify="center" style={{ minHeight: '20vh', padding: '10px' }}>
+          <Grid.Container gap={2} justify="center" style={{ minHeight: '20vh', padding: '10px' }}>
             {games.map(game => (
               <Grid xs={3} key={game.id}>
                 <Card shadow hoverable clickable css={{ h: '100%', d: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -199,11 +149,11 @@ function App() {
                 </Card>
               </Grid>
             ))}
-          </Grid.Container> */}
-          <Button size="sm" auto color="error" onClick={resetVotes} style={{ position: 'absolute', top: 20, right: 20 }}>Reset Votes</Button>
+          </Grid.Container>
+          <Button size="sm" auto color="error" onClick={() => resetVotes(games)} style={{ position: 'absolute', top: 20, right: 20 }}>Reset Votes</Button>
           {renderVoteModalContent()}
-          {renderSelectGameModalContent()}
-          {renderWinnerModal()}
+          <SelectGameModal isVisible={selectGameModalVisible} onClose={() => setSelectGameModalVisible(false)} games={games} />
+          <WinnerModal isVisible={winnerModalVisible} onClose={() => setWinnerModalVisible(false)} winningGame={winningGame} />
         </>
       )}
       {secondsLeft > 0 && <Text size={18} color="white" style={{ position: 'absolute', bottom: 20, right: 20 }}>Voting ends in: {secondsLeft} seconds</Text>}
